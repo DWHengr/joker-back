@@ -1,7 +1,9 @@
 package com.forest.joker.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.forest.joker.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.forest.joker.vo.LoginVo;
 
 /**
  * <p>
@@ -13,4 +15,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface UserService extends IService<User> {
 
+    JSONObject validateLogin(LoginVo loginVo);
 }
