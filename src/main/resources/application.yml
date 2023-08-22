@@ -1,0 +1,31 @@
+server:
+  port: 8088
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/joker?useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT
+    username: root
+    password: 123456
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initialSize: 50 # 配置初始化大小、最小、最大线程数
+      minIdle: 5
+      maxActive: 20 # CPU核数+1，也可以大些但不要超过20，数据库加锁时连接过多性能下降
+      maxWait: 60000   # 最大等待时间，内网：800，外网：1200（三次握手1s）
+      timeBetweenEvictionRunsMillis: 60000
+      minEvictableIdleTimeMillis: 300000  # 配置一个连接在池中最大空间时间，单位是毫秒
+      validationQuery: SELECT 1
+      testWhileIdle: true
+      testOnBorrow: true # 设置从连接池获取连接时是否检查连接有效性，true检查，false不检查
+      testOnReturn: true  # 设置从连接池归还连接时是否检查连接有效性，true检查，false不检查
+      poolPreparedStatements: true # 以支持PSCache（提升写入、查询效率）
+      filters: stat,wall,log4j # 配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+      keepAlive: true       # 保持长连接
+      maxPoolPreparedStatementPerConnectionSize: 20
+      useGlobalDataSourceStat: true
+      connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+      mybatis:
+        configuration:
+          cache-enabled: false  #禁用二级缓存
+          local-cache-scope: session  #一级缓存指定为session级别
