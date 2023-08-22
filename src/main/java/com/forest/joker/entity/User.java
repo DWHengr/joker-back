@@ -29,11 +29,14 @@ public class User implements Serializable {
     @TableId("id")
     private String id;
 
-    @TableField("number")
-    private String number;
+    @TableField("account")
+    private String account;
 
     @TableField("name")
     private String name;
+
+    @TableField("password")
+    private String password;
 
     @TableField("sex")
     private String sex;
