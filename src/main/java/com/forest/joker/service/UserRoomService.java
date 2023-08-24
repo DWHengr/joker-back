@@ -2,6 +2,7 @@ package com.forest.joker.service;
 
 import com.forest.joker.entity.UserRoom;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.forest.joker.vo.UserRoomInfosVo;
 
 /**
  * <p>
@@ -13,4 +14,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface UserRoomService extends IService<UserRoom> {
 
+    UserRoomInfosVo getUserRoomInfo(String userid);
 }
