@@ -51,6 +51,12 @@ public class Room implements Serializable {
     private String status;
 
     /**
+     * 当前轮次
+     */
+    @TableField("round")
+    private Integer round;
+
+    /**
      * 创建时间
      */
     @TableField("create_time")

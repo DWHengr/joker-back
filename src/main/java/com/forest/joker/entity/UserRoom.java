@@ -42,10 +42,16 @@ public class UserRoom implements Serializable {
     private String roomId;
 
     /**
-     * 得分
+     * 总分
      */
     @TableField("score")
     private Integer score;
+
+    /**
+     * 总分
+     */
+    @TableField("before_round_score")
+    private Integer beforeRoundScore;
 
     /**
      * 当前状态
