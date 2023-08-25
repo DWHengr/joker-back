@@ -13,6 +13,10 @@ public class UrlPermitUtil {
     // 免验证Url
     private List<String> urls = new ArrayList<>();
 
+    {
+        urls.add("/wb/room/**");
+    }
+
     public boolean verifyUrl(String permitUrl, List<String> urlArr) {
         for (String url : urlArr) {
             for (int index = 0; index < url.length(); index++) {
