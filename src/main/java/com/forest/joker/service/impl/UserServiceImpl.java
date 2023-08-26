@@ -3,7 +3,9 @@ package com.forest.joker.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.forest.joker.entity.User;
+import com.forest.joker.entity.UserRoom;
 import com.forest.joker.mapper.UserMapper;
+import com.forest.joker.service.UserRoomService;
 import com.forest.joker.service.UserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.forest.joker.utils.JwtUtil;
@@ -27,6 +29,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Resource
     JwtUtil jwtUtil;
 
+    @Resource
+    UserRoomService userRoomService;
+
     @Override
     public JSONObject validateLogin(LoginVo loginVo) {
         // 获取用户
@@ -45,6 +50,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userinfo.put("username", user.getName());
         userinfo.put("phone", user.getPhone());
         userinfo.put("email", user.getEmail());
+        try {
+            LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userRoomLambdaQueryWrapper.eq(UserRoom::getUserId, user.getId());
+            UserRoom userRoom = userRoomService.getOne(userRoomLambdaQueryWrapper);
+            userinfo.put("roomId", userRoom.getRoomId());
+        } catch (Exception e) {
+            userinfo.put("roomId", null);
+        }
         String token = jwtUtil.createToken(userinfo);
         userinfo.put("token", token);
         return ResultUtil.Succeed(userinfo);

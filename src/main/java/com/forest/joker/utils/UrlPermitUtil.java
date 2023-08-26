@@ -14,7 +14,7 @@ public class UrlPermitUtil {
     private List<String> urls = new ArrayList<>();
 
     {
-        urls.add("/wb/room/**");
+        urls.add("/ws/room/**");
     }
 
     public boolean verifyUrl(String permitUrl, List<String> urlArr) {
