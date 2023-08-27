@@ -45,6 +45,18 @@ public class Room implements Serializable {
     private String name;
 
     /**
+     * 房间类型
+     */
+    @TableField("type")
+    private String type;
+
+    /**
+     * 房间密码
+     */
+    @TableField("password")
+    private String password;
+
+    /**
      * 房间状态
      */
     @TableField("status")

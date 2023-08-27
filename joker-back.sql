@@ -19,9 +19,11 @@ CREATE TABLE `user`
 DROP TABLE if EXISTS `room`;
 CREATE TABLE `room`
 (
-    `id`          varchar(64)  NOT NULL COMMENT '用户名',
+    `id`          varchar(64)  NOT NULL,
     `number`      varchar(64)  NOT NULL COMMENT '房间号',
     `name`        varchar(200) NOT NULL COMMENT '房间名称',
+    `type`        varchar(64)  NOT NULL COMMENT '房间类型',
+    `password`    varchar(64)  NOT NULL COMMENT '房间密码',
     `status`      varchar(500) COMMENT '房间状态',
     `round`       int    DEFAULT 1 COMMENT '当前轮次',
     `create_time` bigint DEFAULT 0 COMMENT '创建时间',
