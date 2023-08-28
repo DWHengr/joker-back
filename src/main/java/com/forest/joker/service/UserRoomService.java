@@ -15,4 +15,8 @@ import com.forest.joker.vo.UserRoomInfosVo;
 public interface UserRoomService extends IService<UserRoom> {
 
     UserRoomInfosVo getUserRoomInfo(String userid);
+
+    boolean quitRoom(String userid);
+
+    boolean joinRoom(String userid, String roomId);
 }

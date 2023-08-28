@@ -1,7 +1,9 @@
 package com.forest.joker.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.forest.joker.entity.Room;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.forest.joker.vo.CreateRoomVo;
 
 /**
  * <p>
@@ -13,4 +15,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface RoomService extends IService<Room> {
 
+    JSONObject CreateRoom(String userid, CreateRoomVo createRoomVo);
 }

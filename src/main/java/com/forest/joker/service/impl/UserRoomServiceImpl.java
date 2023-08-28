@@ -9,6 +9,7 @@ import com.forest.joker.service.RoomService;
 import com.forest.joker.service.UserRoomService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.forest.joker.service.UserService;
+import com.forest.joker.utils.RandomUtil;
 import com.forest.joker.vo.UserRoomInfosVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -48,6 +49,28 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
 
         return null;
 
+    }
+
+    @Override
+    public boolean quitRoom(String userid) {
+        LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userRoomLambdaQueryWrapper.eq(UserRoom::getUserId, userid);
+        return remove(userRoomLambdaQueryWrapper);
+    }
+
+    @Override
+    public boolean joinRoom(String userid, String roomId) {
+        UserRoom userRoom = new UserRoom();
+        userRoom.setId(RandomUtil.generateUuid());
+        userRoom.setRoomId(roomId);
+        userRoom.setUserId(userid);
+        userRoom.setScore(0);
+        userRoom.setBeforeRoundScore(0);
+        userRoom.setIsDealers(1);
+        userRoom.setIsOwner(1);
+        userRoom.setCreateTime(System.currentTimeMillis());
+        userRoom.setUpdateTime(System.currentTimeMillis());
+        return save(userRoom);
     }
 
     /**
