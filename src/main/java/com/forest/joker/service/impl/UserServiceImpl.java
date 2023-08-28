@@ -2,9 +2,11 @@ package com.forest.joker.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.forest.joker.entity.Room;
 import com.forest.joker.entity.User;
 import com.forest.joker.entity.UserRoom;
 import com.forest.joker.mapper.UserMapper;
+import com.forest.joker.service.RoomService;
 import com.forest.joker.service.UserRoomService;
 import com.forest.joker.service.UserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -32,6 +34,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Resource
     UserRoomService userRoomService;
 
+    @Resource
+    RoomService roomService;
+
     @Override
     public JSONObject validateLogin(LoginVo loginVo) {
         // 获取用户
@@ -45,21 +50,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return ResultUtil.Fail("密码错误");
         }
         JSONObject userinfo = new JSONObject();
-        userinfo.put("userid", user.getId());
-        userinfo.put("account", user.getAccount());
-        userinfo.put("username", user.getName());
-        userinfo.put("phone", user.getPhone());
-        userinfo.put("email", user.getEmail());
+        userinfo.put("userId", user.getId());
         try {
             LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
             userRoomLambdaQueryWrapper.eq(UserRoom::getUserId, user.getId());
             UserRoom userRoom = userRoomService.getOne(userRoomLambdaQueryWrapper);
             userinfo.put("roomId", userRoom.getRoomId());
+            //房间编号
+            LambdaQueryWrapper<Room> roomLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            roomLambdaQueryWrapper.eq(Room::getId, userRoom.getRoomId());
+            Room room = roomService.getOne(roomLambdaQueryWrapper);
+            userinfo.put("roomNumber", room.getNumber());
         } catch (Exception e) {
             userinfo.put("roomId", null);
+            userinfo.put("roomNumber", null);
         }
-        String token = jwtUtil.createToken(userinfo);
-        userinfo.put("token", token);
+        //生成ws的token
+        userinfo.put("wsToken", jwtUtil.createToken(userinfo));
+        userinfo.put("account", user.getAccount());
+        userinfo.put("username", user.getName());
+        userinfo.put("phone", user.getPhone());
+        userinfo.put("email", user.getEmail());
+
+        //生成用户token
+        userinfo.put("token", jwtUtil.createToken(userinfo));
         return ResultUtil.Succeed(userinfo);
     }
 }

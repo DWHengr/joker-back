@@ -4,6 +4,8 @@ import io.jsonwebtoken.*;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Map;
 
@@ -17,8 +19,8 @@ public class JwtUtil implements Serializable {
     // 令牌秘钥
     private static String secret = "jocke-E7Ymu64s";
 
-    // 令牌有效期（默认3600分钟）
-    private static int expireTime = 60 * 6;
+    // 令牌有效期
+    private static int days = 30;
 
     /**
      * 获取token
@@ -27,11 +29,13 @@ public class JwtUtil implements Serializable {
      * @return
      */
     public static String createToken(Map<String, Object> claims) {
-        long now = System.currentTimeMillis() + (expireTime * 60 * 1000);
+        Instant now = Instant.now();
+        Instant expireTime = now.plus(days, ChronoUnit.DAYS);
+        System.out.println(expireTime);
         return Jwts.builder()
                 .setIssuer("joker")
                 .addClaims(claims)
-                .setExpiration(new Date(now))
+                .setExpiration(Date.from(expireTime))
                 .signWith(SignatureAlgorithm.HS256, secret).compact();
     }
 

@@ -37,7 +37,7 @@ public class WebSocketController {
         } catch (Exception e) {
             return;
         }
-        String userId = (String) claims.get("userid");
+        String userId = (String) claims.get("userId");
         String roomId = (String) claims.get("roomId");
         if (null == roomId || null == userId)
             return;
