@@ -13,6 +13,7 @@ import java.util.List;
 public class UserRoomInfosVo {
     private Room room;
     private List<UserRoomInfoVo> userRooms;
+    private String roomOwnerUserId;
 
     @Data
     public static class UserRoomInfoVo extends UserRoom {
