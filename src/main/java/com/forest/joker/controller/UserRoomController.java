@@ -5,6 +5,7 @@ import com.forest.joker.annotation.Userid;
 import com.forest.joker.service.UserRoomService;
 import com.forest.joker.utils.ResultUtil;
 import com.forest.joker.vo.UserJoinRoomVo;
+import com.forest.joker.vo.UserQuitRoomVo;
 import com.forest.joker.vo.UserRoomInfosVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +39,15 @@ public class UserRoomController {
     @PostMapping("/join")
     public Object userJoinRoom(@Userid String userid, @RequestBody UserJoinRoomVo userJoinRoomVo) {
         JSONObject result = userRoomService.userJoinRoom(userid, userJoinRoomVo);
+        return result;
+    }
+
+    /**
+     * 用户退出房间
+     */
+    @PostMapping("/quit")
+    public Object userQuitRoom(@Userid String userid, @RequestBody UserQuitRoomVo userQuitRoomVo) {
+        JSONObject result = userRoomService.userQuitRoom(userid, userQuitRoomVo);
         return result;
     }
 }

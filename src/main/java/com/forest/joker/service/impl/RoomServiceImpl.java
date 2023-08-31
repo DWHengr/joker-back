@@ -55,7 +55,7 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
         save(room);
 
         //用户加入房间
-        userRoomService.joinRoom(userid, room.getId());
+        userRoomService.joinRoom(userid, room.getId(), 1, 1);
 
         //生成ws房间token
         return ResultUtil.Succeed(createWsTokenInfo(userid, room));

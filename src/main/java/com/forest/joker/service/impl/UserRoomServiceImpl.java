@@ -14,10 +14,12 @@ import com.forest.joker.service.UserService;
 import com.forest.joker.utils.RandomUtil;
 import com.forest.joker.utils.ResultUtil;
 import com.forest.joker.vo.UserJoinRoomVo;
+import com.forest.joker.vo.UserQuitRoomVo;
 import com.forest.joker.vo.UserRoomInfosVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -63,15 +65,15 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
     }
 
     @Override
-    public boolean joinRoom(String userid, String roomId) {
+    public boolean joinRoom(String userid, String roomId, int dealers, int owner) {
         UserRoom userRoom = new UserRoom();
         userRoom.setId(RandomUtil.generateUuid());
         userRoom.setRoomId(roomId);
         userRoom.setUserId(userid);
         userRoom.setScore(0);
         userRoom.setBeforeRoundScore(0);
-        userRoom.setIsDealers(1);
-        userRoom.setIsOwner(1);
+        userRoom.setIsDealers(dealers);
+        userRoom.setIsOwner(owner);
         userRoom.setCreateTime(System.currentTimeMillis());
         userRoom.setUpdateTime(System.currentTimeMillis());
         return save(userRoom);
@@ -87,11 +89,40 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
         if (!room.getPassword().equals(userJoinRoomVo.getRoomPassword())) {
             throw new JokerAopException("房间密码错误").param("roomId", userJoinRoomVo.getRoomNumber());
         }
-        boolean flag = joinRoom(userid, room.getId());
+        boolean flag = joinRoom(userid, room.getId(), 0, 0);
         if (flag)
             return ResultUtil.Succeed(roomService.createWsTokenInfo(userid, room));
         else
             return ResultUtil.Fail();
+    }
+
+    @Override
+    @Transactional(rollbackFor = {RuntimeException.class})
+    public JSONObject userQuitRoom(String userid, UserQuitRoomVo userQuitRoomVo) {
+        //根据用户id和房间id，获取用户房间信息
+        UserRoom userRoom = getUserRoomByUserIdAndRoomId(userid, userQuitRoomVo.getRoomId());
+
+        LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if (userRoom.getIsOwner() == 1) {
+            //用户为当前房间房主时，解散房间
+            userRoomLambdaQueryWrapper.eq(UserRoom::getRoomId, userRoom.getRoomId());
+            roomService.removeById(userRoom.getRoomId());
+        } else {
+            userRoomLambdaQueryWrapper.eq(UserRoom::getRoomId, userRoom.getRoomId())
+                    .eq(UserRoom::getUserId, userid);
+        }
+        boolean flag = remove(userRoomLambdaQueryWrapper);
+        if (flag)
+            return ResultUtil.Succeed();
+        else
+            return ResultUtil.Fail();
+    }
+
+    public UserRoom getUserRoomByUserIdAndRoomId(String userId, String roomId) {
+        LambdaQueryWrapper<UserRoom> roomLambdaQueryWrapper = new LambdaQueryWrapper();
+        roomLambdaQueryWrapper.eq(UserRoom::getRoomId, roomId).eq(UserRoom::getUserId, userId);
+        UserRoom userRoom = getOne(roomLambdaQueryWrapper);
+        return userRoom;
     }
 
     /**
