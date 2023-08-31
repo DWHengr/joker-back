@@ -1,15 +1,19 @@
 package com.forest.joker.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.forest.joker.entity.Room;
 import com.forest.joker.entity.User;
 import com.forest.joker.entity.UserRoom;
+import com.forest.joker.exception.JokerAopException;
 import com.forest.joker.mapper.UserRoomMapper;
 import com.forest.joker.service.RoomService;
 import com.forest.joker.service.UserRoomService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.forest.joker.service.UserService;
 import com.forest.joker.utils.RandomUtil;
+import com.forest.joker.utils.ResultUtil;
+import com.forest.joker.vo.UserJoinRoomVo;
 import com.forest.joker.vo.UserRoomInfosVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -71,6 +75,23 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
         userRoom.setCreateTime(System.currentTimeMillis());
         userRoom.setUpdateTime(System.currentTimeMillis());
         return save(userRoom);
+    }
+
+    @Override
+    public JSONObject userJoinRoom(String userid, UserJoinRoomVo userJoinRoomVo) {
+        //验证房间密码
+        Room room = roomService.getRoomInfoByNumber(userJoinRoomVo.getRoomNumber());
+        if (null == room) {
+            throw new JokerAopException("房间不存在").param("roomId", userJoinRoomVo.getRoomNumber());
+        }
+        if (!room.getPassword().equals(userJoinRoomVo.getRoomPassword())) {
+            throw new JokerAopException("房间密码错误").param("roomId", userJoinRoomVo.getRoomNumber());
+        }
+        boolean flag = joinRoom(userid, room.getId());
+        if (flag)
+            return ResultUtil.Succeed(roomService.createWsTokenInfo(userid, room));
+        else
+            return ResultUtil.Fail();
     }
 
     /**

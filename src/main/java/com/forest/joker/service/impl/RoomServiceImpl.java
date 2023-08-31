@@ -1,7 +1,9 @@
 package com.forest.joker.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.forest.joker.entity.Room;
+import com.forest.joker.exception.JokerAopException;
 import com.forest.joker.mapper.RoomMapper;
 import com.forest.joker.service.RoomService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -10,6 +12,7 @@ import com.forest.joker.utils.JwtUtil;
 import com.forest.joker.utils.RandomUtil;
 import com.forest.joker.utils.ResultUtil;
 import com.forest.joker.vo.CreateRoomVo;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +28,7 @@ import javax.annotation.Resource;
  * @since 2023-08-22
  */
 @Service
+@Slf4j
 public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements RoomService {
 
     @Resource
@@ -32,7 +36,7 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
 
     @Override
     @Transactional(rollbackFor = {RuntimeException.class})
-    public JSONObject CreateRoom(String userid, CreateRoomVo createRoomVo) {
+    public JSONObject createRoom(String userid, CreateRoomVo createRoomVo) {
         //用户退出之前房间
         userRoomService.quitRoom(userid);
 
@@ -54,12 +58,28 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
         userRoomService.joinRoom(userid, room.getId());
 
         //生成ws房间token
+        return ResultUtil.Succeed(createWsTokenInfo(userid, room));
+    }
+
+    @Override
+    public JSONObject createWsTokenInfo(String userId, Room room) {
         JSONObject info = new JSONObject();
         info.put("roomId", room.getId());
         info.put("roomNumber", room.getNumber());
-        info.put("userId", userid);
+        info.put("userId", userId);
         info.put("wsToken", JwtUtil.createToken(info));
+        return info;
+    }
 
-        return ResultUtil.Succeed(info);
+    @Override
+    public Room getRoomInfoByNumber(String roomNumber) {
+        try {
+            LambdaQueryWrapper<Room> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(Room::getNumber, roomNumber);
+            Room room = getOne(wrapper);
+            return room;
+        } catch (Exception e) {
+            throw new JokerAopException("房间信息错误");
+        }
     }
 }

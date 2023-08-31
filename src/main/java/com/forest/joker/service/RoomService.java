@@ -15,5 +15,9 @@ import com.forest.joker.vo.CreateRoomVo;
  */
 public interface RoomService extends IService<Room> {
 
-    JSONObject CreateRoom(String userid, CreateRoomVo createRoomVo);
+    JSONObject createRoom(String userid, CreateRoomVo createRoomVo);
+
+    Room getRoomInfoByNumber(String roomNumber);
+
+    JSONObject createWsTokenInfo(String userId, Room room);
 }

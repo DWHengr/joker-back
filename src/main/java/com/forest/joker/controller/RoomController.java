@@ -25,7 +25,7 @@ public class RoomController {
      */
     @PostMapping("/create")
     public Object createRoom(@Userid String userid, @RequestBody CreateRoomVo createRoomVo) {
-        return roomService.CreateRoom(userid, createRoomVo);
+        return roomService.createRoom(userid, createRoomVo);
     }
 
 }

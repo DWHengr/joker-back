@@ -1,7 +1,9 @@
 package com.forest.joker.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.forest.joker.entity.UserRoom;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.forest.joker.vo.UserJoinRoomVo;
 import com.forest.joker.vo.UserRoomInfosVo;
 
 /**
@@ -19,4 +21,6 @@ public interface UserRoomService extends IService<UserRoom> {
     boolean quitRoom(String userid);
 
     boolean joinRoom(String userid, String roomId);
+
+    JSONObject userJoinRoom(String userid, UserJoinRoomVo userJoinRoomVo);
 }
