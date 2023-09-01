@@ -20,4 +20,6 @@ public interface RoomService extends IService<Room> {
     Room getRoomInfoByNumber(String roomNumber);
 
     JSONObject createWsTokenInfo(String userId, Room room);
+
+    Object roomInfoByUserid(String userid);
 }

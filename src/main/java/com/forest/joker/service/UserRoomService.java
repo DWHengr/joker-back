@@ -19,6 +19,8 @@ public interface UserRoomService extends IService<UserRoom> {
 
     UserRoomInfosVo getUserRoomInfo(String userid);
 
+    UserRoom getPersonalUserRoomInfo(String userid);
+
     boolean quitRoom(String userid);
 
     boolean joinRoom(String userid, String roomId, int dealers, int owner);

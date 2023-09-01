@@ -1,4 +1,4 @@
-package com.forest.joker.controller;
+package com.forest.joker.ws;
 
 import com.alibaba.fastjson.JSONObject;
 import com.forest.joker.utils.JwtUtil;
@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @ServerEndpoint("/ws/room/{token}")
 @Component
 @Slf4j
-public class WebSocketController {
+public class WebSocketService {
 
     @Resource
     JwtUtil jwtUtil;
@@ -63,7 +63,38 @@ public class WebSocketController {
      * 连接关闭
      */
     @OnClose
-    public void onClose() {
+    public void onClose(@PathParam(value = "token") String token) {
+        Claims claims = null;
+        try {
+            claims = jwtUtil.parseToken(token);
+        } catch (Exception e) {
+            return;
+        }
+        String userId = (String) claims.get("userId");
+        String roomId = (String) claims.get("roomId");
+        if (null == roomId || null == userId)
+            return;
+        ConcurrentHashMap<String, Session> roomSessionPool = sessionPool.get(roomId);
+        if (null != roomSessionPool) {
+            roomSessionPool.remove(userId);
+        }
+    }
+
+    /**
+     * 退出房间
+     */
+    public static void quitRoom(String roomId, String userId) {
+        ConcurrentHashMap<String, Session> roomSessionPool = sessionPool.get(roomId);
+        if (null != roomSessionPool) {
+            roomSessionPool.remove(userId);
+        }
+    }
+
+    /**
+     * 解散房间
+     */
+    public static void dissolveRoom(String roomId) {
+        sessionPool.remove(roomId);
     }
 
     /**
@@ -71,7 +102,7 @@ public class WebSocketController {
      *
      * @param message 发送的消息
      */
-    public void sendAllMessage(String roomId, Object message) {
+    public static void sendAllMessage(String roomId, WsMsg message) {
         ConcurrentHashMap<String, Session> roomSession = sessionPool.get(roomId);
         if (null != roomSession) {
             for (Map.Entry<String, Session> userSession : roomSession.entrySet()) {

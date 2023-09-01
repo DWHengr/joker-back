@@ -28,4 +28,12 @@ public class RoomController {
         return roomService.createRoom(userid, createRoomVo);
     }
 
+    /**
+     * 根据当前用户，获取所在房间信息
+     */
+    @GetMapping("/user")
+    public Object roomInfo(@Userid String userid) {
+        return roomService.roomInfoByUserid(userid);
+    }
+
 }

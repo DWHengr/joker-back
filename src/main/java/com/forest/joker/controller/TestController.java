@@ -1,9 +1,12 @@
 package com.forest.joker.controller;
 
 import com.forest.joker.annotation.UrlFree;
+import com.forest.joker.constant.WsMsgType;
 import com.forest.joker.service.UserRoomService;
 import com.forest.joker.utils.ResultUtil;
 import com.forest.joker.vo.UserRoomInfosVo;
+import com.forest.joker.ws.WsMsg;
+import com.forest.joker.ws.WebSocketService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,8 +23,6 @@ import javax.servlet.http.HttpServletRequest;
 @Slf4j
 public class TestController {
 
-    @Resource
-    WebSocketController webSocketController;
 
     @Resource
     UserRoomService userRoomService;
@@ -31,7 +32,7 @@ public class TestController {
     public Object Test(HttpServletRequest httpServletRequest) {
         Object userinfo = httpServletRequest.getAttribute("userinfo");
         UserRoomInfosVo userRoomInfo = userRoomService.getUserRoomInfo("use-1");
-        webSocketController.sendAllMessage("2e6fcf08-8c45-4eb8-b3bd-719c02bb9c25", userRoomInfo);
+        WebSocketService.sendAllMessage("2e6fcf08-8c45-4eb8-b3bd-719c02bb9c25", new WsMsg(WsMsgType.Info, userRoomInfo));
         return ResultUtil.Succeed(userinfo);
     }
 }

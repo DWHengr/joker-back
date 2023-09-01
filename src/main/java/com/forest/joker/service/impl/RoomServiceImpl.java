@@ -3,6 +3,7 @@ package com.forest.joker.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.forest.joker.entity.Room;
+import com.forest.joker.entity.UserRoom;
 import com.forest.joker.exception.JokerAopException;
 import com.forest.joker.mapper.RoomMapper;
 import com.forest.joker.service.RoomService;
@@ -69,6 +70,17 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
         info.put("userId", userId);
         info.put("wsToken", JwtUtil.createToken(info));
         return info;
+    }
+
+    @Override
+    public Object roomInfoByUserid(String userid) {
+        UserRoom personalUserRoomInfo = userRoomService.getPersonalUserRoomInfo(userid);
+        if (null == personalUserRoomInfo)
+            return ResultUtil.Succeed(null);
+        LambdaQueryWrapper<Room> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Room::getId, personalUserRoomInfo.getRoomId());
+        Room room = getOne(wrapper);
+        return ResultUtil.Succeed(room);
     }
 
     @Override

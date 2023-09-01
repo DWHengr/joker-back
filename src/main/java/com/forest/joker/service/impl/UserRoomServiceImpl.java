@@ -2,6 +2,7 @@ package com.forest.joker.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.forest.joker.constant.WsMsgType;
 import com.forest.joker.entity.Room;
 import com.forest.joker.entity.User;
 import com.forest.joker.entity.UserRoom;
@@ -16,6 +17,8 @@ import com.forest.joker.utils.ResultUtil;
 import com.forest.joker.vo.UserJoinRoomVo;
 import com.forest.joker.vo.UserQuitRoomVo;
 import com.forest.joker.vo.UserRoomInfosVo;
+import com.forest.joker.ws.WebSocketService;
+import com.forest.joker.ws.WsMsg;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -42,6 +45,16 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
 
     @Resource
     UserService userService;
+
+    @Override
+    public UserRoom getPersonalUserRoomInfo(String userid) {
+        //获取当前用户房间id
+        LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userRoomLambdaQueryWrapper.eq(UserRoom::getUserId, userid);
+        UserRoom userRoom = getOne(userRoomLambdaQueryWrapper);
+        return userRoom;
+
+    }
 
     @Override
     public UserRoomInfosVo getUserRoomInfo(String userid) {
@@ -90,6 +103,7 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
             throw new JokerAopException("房间密码错误").param("roomId", userJoinRoomVo.getRoomNumber());
         }
         boolean flag = joinRoom(userid, room.getId(), 0, 0);
+        WebSocketService.sendAllMessage(room.getId(), new WsMsg(WsMsgType.Info, getUserRoomInfo(userid)));
         if (flag)
             return ResultUtil.Succeed(roomService.createWsTokenInfo(userid, room));
         else
@@ -101,17 +115,26 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
     public JSONObject userQuitRoom(String userid, UserQuitRoomVo userQuitRoomVo) {
         //根据用户id和房间id，获取用户房间信息
         UserRoom userRoom = getUserRoomByUserIdAndRoomId(userid, userQuitRoomVo.getRoomId());
-
+        if (null == userRoom)
+            return ResultUtil.Succeed();
+        boolean flag = false;
         LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
         if (userRoom.getIsOwner() == 1) {
             //用户为当前房间房主时，解散房间
             userRoomLambdaQueryWrapper.eq(UserRoom::getRoomId, userRoom.getRoomId());
             roomService.removeById(userRoom.getRoomId());
+            flag = remove(userRoomLambdaQueryWrapper);
+            //发送解散房间消息
+            WebSocketService.sendAllMessage(userRoom.getRoomId(), new WsMsg(WsMsgType.Quit, null));
+            WebSocketService.dissolveRoom(userRoom.getRoomId());
         } else {
             userRoomLambdaQueryWrapper.eq(UserRoom::getRoomId, userRoom.getRoomId())
                     .eq(UserRoom::getUserId, userid);
+            //退出房间
+            flag = remove(userRoomLambdaQueryWrapper);
+            WebSocketService.sendAllMessage(userRoom.getRoomId(), new WsMsg(WsMsgType.Info, getUserRoomInfoByRoomId(userRoom.getRoomId())));
+            WebSocketService.quitRoom(userRoom.getRoomId(), userid);
         }
-        boolean flag = remove(userRoomLambdaQueryWrapper);
         if (flag)
             return ResultUtil.Succeed();
         else
