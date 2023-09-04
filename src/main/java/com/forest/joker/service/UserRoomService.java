@@ -28,4 +28,6 @@ public interface UserRoomService extends IService<UserRoom> {
     JSONObject userJoinRoom(String userid, UserJoinRoomVo userJoinRoomVo);
 
     JSONObject userQuitRoom(String userid, UserQuitRoomVo userQuitRoomVo);
+
+    JSONObject createQrToken(String userid);
 }

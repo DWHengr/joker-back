@@ -12,6 +12,7 @@ import com.forest.joker.service.RoomService;
 import com.forest.joker.service.UserRoomService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.forest.joker.service.UserService;
+import com.forest.joker.utils.JwtUtil;
 import com.forest.joker.utils.RandomUtil;
 import com.forest.joker.utils.ResultUtil;
 import com.forest.joker.vo.UserJoinRoomVo;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -139,6 +141,27 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
             return ResultUtil.Succeed();
         else
             return ResultUtil.Fail();
+    }
+
+    @Override
+    public JSONObject createQrToken(String userid) {
+        LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userRoomLambdaQueryWrapper.eq(UserRoom::getUserId, userid);
+        UserRoom userRoom = getOne(userRoomLambdaQueryWrapper);
+        if (null == userRoom) {
+            return ResultUtil.Fail("房间不存在");
+        }
+        Room room = roomService.getById(userRoom.getRoomId());
+        if (null == room) {
+            return ResultUtil.Fail("房间不存在");
+        }
+        HashMap<String, Object> info = new HashMap<>();
+        info.put("roomNumber", room.getNumber());
+        info.put("roomPassword", room.getPassword());
+        String token = JwtUtil.createToken(info);
+        JSONObject resultJson = new JSONObject();
+        resultJson.put("qrToken", token);
+        return ResultUtil.Succeed(resultJson);
     }
 
     public UserRoom getUserRoomByUserIdAndRoomId(String userId, String roomId) {

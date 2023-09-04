@@ -42,6 +42,16 @@ public class UserRoomController {
         return result;
     }
 
+
+    /**
+     * 房间二维码token生成
+     */
+    @GetMapping("/qr/token")
+    public Object createQrToken(@Userid String userid) {
+        JSONObject result = userRoomService.createQrToken(userid);
+        return result;
+    }
+
     /**
      * 用户退出房间
      */

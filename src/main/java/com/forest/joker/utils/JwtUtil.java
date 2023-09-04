@@ -31,7 +31,6 @@ public class JwtUtil implements Serializable {
     public static String createToken(Map<String, Object> claims) {
         Instant now = Instant.now();
         Instant expireTime = now.plus(days, ChronoUnit.DAYS);
-        System.out.println(expireTime);
         return Jwts.builder()
                 .setIssuer("joker")
                 .addClaims(claims)
