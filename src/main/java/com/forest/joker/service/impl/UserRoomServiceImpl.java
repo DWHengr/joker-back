@@ -81,6 +81,11 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
 
     @Override
     public boolean joinRoom(String userid, String roomId, int dealers, int owner) {
+        LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userRoomLambdaQueryWrapper.eq(UserRoom::getUserId, userid).eq(UserRoom::getRoomId, roomId);
+        int count = count(userRoomLambdaQueryWrapper);
+        if (count > 0)
+            return true;
         UserRoom userRoom = new UserRoom();
         userRoom.setId(RandomUtil.generateUuid());
         userRoom.setRoomId(roomId);
@@ -99,10 +104,10 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
         //验证房间密码
         Room room = roomService.getRoomInfoByNumber(userJoinRoomVo.getRoomNumber());
         if (null == room) {
-            throw new JokerAopException("房间不存在").param("roomId", userJoinRoomVo.getRoomNumber());
+            throw new JokerAopException("房间不存在~").param("roomId", userJoinRoomVo.getRoomNumber());
         }
         if (!room.getPassword().equals(userJoinRoomVo.getRoomPassword())) {
-            throw new JokerAopException("房间密码错误").param("roomId", userJoinRoomVo.getRoomNumber());
+            throw new JokerAopException("房间密码错误~").param("roomId", userJoinRoomVo.getRoomNumber());
         }
         boolean flag = joinRoom(userid, room.getId(), 0, 0);
         WebSocketService.sendAllMessage(room.getId(), new WsMsg(WsMsgType.Info, getUserRoomInfo(userid)));
@@ -149,11 +154,11 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
         userRoomLambdaQueryWrapper.eq(UserRoom::getUserId, userid);
         UserRoom userRoom = getOne(userRoomLambdaQueryWrapper);
         if (null == userRoom) {
-            return ResultUtil.Fail("房间不存在");
+            return ResultUtil.Fail("房间不存在~");
         }
         Room room = roomService.getById(userRoom.getRoomId());
         if (null == room) {
-            return ResultUtil.Fail("房间不存在");
+            return ResultUtil.Fail("房间不存在~");
         }
         HashMap<String, Object> info = new HashMap<>();
         info.put("roomNumber", room.getNumber());
