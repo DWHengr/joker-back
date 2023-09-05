@@ -3,10 +3,7 @@ package com.forest.joker.service;
 import com.alibaba.fastjson.JSONObject;
 import com.forest.joker.entity.UserRoom;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.forest.joker.vo.UserJoinRoomVo;
-import com.forest.joker.vo.UserKickOutVo;
-import com.forest.joker.vo.UserQuitRoomVo;
-import com.forest.joker.vo.UserRoomInfosVo;
+import com.forest.joker.vo.*;
 
 /**
  * <p>
@@ -33,4 +30,6 @@ public interface UserRoomService extends IService<UserRoom> {
     JSONObject createQrToken(String userid);
 
     JSONObject userKickOut(String userid, UserKickOutVo userKickOutVo);
+
+    JSONObject userSetOwner(String userid, UserSetOwnerVo userSetOwnerVo);
 }

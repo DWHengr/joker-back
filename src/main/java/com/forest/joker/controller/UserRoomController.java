@@ -87,4 +87,13 @@ public class UserRoomController {
         JSONObject result = userRoomService.userKickOut(userid, userKickOutVo);
         return result;
     }
+
+    /**
+     * 转让房主
+     */
+    @PostMapping("/owner")
+    public Object userSetOwner(@Userid String userid, @RequestBody UserSetOwnerVo userSetOwnerVo) {
+        JSONObject result = userRoomService.userSetOwner(userid, userSetOwnerVo);
+        return result;
+    }
 }

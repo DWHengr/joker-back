@@ -2,6 +2,7 @@ package com.forest.joker.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.forest.joker.constant.WsMsgType;
 import com.forest.joker.entity.Room;
 import com.forest.joker.entity.User;
@@ -15,10 +16,7 @@ import com.forest.joker.service.UserService;
 import com.forest.joker.utils.JwtUtil;
 import com.forest.joker.utils.RandomUtil;
 import com.forest.joker.utils.ResultUtil;
-import com.forest.joker.vo.UserJoinRoomVo;
-import com.forest.joker.vo.UserKickOutVo;
-import com.forest.joker.vo.UserQuitRoomVo;
-import com.forest.joker.vo.UserRoomInfosVo;
+import com.forest.joker.vo.*;
 import com.forest.joker.ws.WebSocketService;
 import com.forest.joker.ws.WsMsg;
 import lombok.extern.slf4j.Slf4j;
@@ -193,6 +191,40 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
             return ResultUtil.Succeed();
         else
             return ResultUtil.Fail();
+    }
+
+    @Override
+    @Transactional(rollbackFor = {RuntimeException.class})
+    public JSONObject userSetOwner(String userid, UserSetOwnerVo userSetOwnerVo) {
+        LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userRoomLambdaQueryWrapper.eq(UserRoom::getUserId, userid).eq(UserRoom::getRoomId, userSetOwnerVo.getRoomId());
+        UserRoom userRoom = getOne(userRoomLambdaQueryWrapper);
+        if (null == userRoom) {
+            return ResultUtil.Fail("房间不存在~");
+        }
+        if (userRoom.getIsOwner() != 1) {
+            return ResultUtil.Fail("您不是房主~");
+        }
+        LambdaUpdateWrapper<UserRoom> userRoomLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        userRoomLambdaUpdateWrapper.set(UserRoom::getIsOwner, 0)
+                .eq(UserRoom::getRoomId, userSetOwnerVo.getRoomId())
+                .eq(UserRoom::getUserId, userid);
+        boolean flag = update(userRoomLambdaUpdateWrapper);
+        if (!flag) {
+            throw new JokerAopException("房主转让失败~");
+        }
+        //转让房主
+        userRoomLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        userRoomLambdaUpdateWrapper.set(UserRoom::getIsOwner, 1)
+                .eq(UserRoom::getRoomId, userSetOwnerVo.getRoomId())
+                .eq(UserRoom::getUserId, userSetOwnerVo.getUserId());
+        flag = update(userRoomLambdaUpdateWrapper);
+        if (!flag) {
+            throw new JokerAopException("房主转让失败~");
+        }
+        WebSocketService.sendAllMessage(userSetOwnerVo.getRoomId(), new WsMsg(WsMsgType.Info, getUserRoomInfoByRoomId(userSetOwnerVo.getRoomId())));
+        return ResultUtil.Succeed();
+
     }
 
     public UserRoom getUserRoomByUserIdAndRoomId(String userId, String roomId) {
