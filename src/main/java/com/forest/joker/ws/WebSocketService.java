@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.websocket.OnClose;
+import javax.websocket.OnError;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
@@ -27,7 +28,9 @@ public class WebSocketService {
     @Resource
     JwtUtil jwtUtil;
 
-    private static ConcurrentHashMap<String, ConcurrentHashMap<String, Session>> sessionPool = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, ConcurrentHashMap<String, Session>> roomAndUserSessionPool = new ConcurrentHashMap<>();
+
+    private static ConcurrentHashMap<String, Session> userSessionPool = new ConcurrentHashMap<>();
 
     @OnOpen
     public void onOpen(Session session, @PathParam(value = "token") String token) {
@@ -41,10 +44,10 @@ public class WebSocketService {
         String roomId = (String) claims.get("roomId");
         if (null == roomId || null == userId)
             return;
-        ConcurrentHashMap<String, Session> roomSessionPool = sessionPool.get(roomId);
+        ConcurrentHashMap<String, Session> roomSessionPool = roomAndUserSessionPool.get(roomId);
         if (null == roomSessionPool) {
             roomSessionPool = new ConcurrentHashMap<>();
-            sessionPool.put(roomId, roomSessionPool);
+            roomAndUserSessionPool.put(roomId, roomSessionPool);
         }
         try {
             Session userSession = roomSessionPool.get(userId);
@@ -56,6 +59,7 @@ public class WebSocketService {
         }
         // 建立连接
         roomSessionPool.put(userId, session);
+        userSessionPool.put(userId, session);
         log.info("{}加入房间{}", userId, roomId);
     }
 
@@ -74,9 +78,27 @@ public class WebSocketService {
         String roomId = (String) claims.get("roomId");
         if (null == roomId || null == userId)
             return;
-        ConcurrentHashMap<String, Session> roomSessionPool = sessionPool.get(roomId);
+        ConcurrentHashMap<String, Session> roomSessionPool = roomAndUserSessionPool.get(roomId);
         if (null != roomSessionPool) {
-            roomSessionPool.remove(userId);
+            Session session = roomSessionPool.get(userId);
+            if (null != session) {
+                try {
+                    session.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                roomSessionPool.remove(userId);
+                userSessionPool.remove(userId);
+            }
+        }
+    }
+
+    @OnError
+    public void onError(Session session, Throwable throwable) {
+        try {
+            session.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -84,7 +106,7 @@ public class WebSocketService {
      * 退出房间
      */
     public static void quitRoom(String roomId, String userId) {
-        ConcurrentHashMap<String, Session> roomSessionPool = sessionPool.get(roomId);
+        ConcurrentHashMap<String, Session> roomSessionPool = roomAndUserSessionPool.get(roomId);
         if (null != roomSessionPool) {
             roomSessionPool.remove(userId);
         }
@@ -94,7 +116,7 @@ public class WebSocketService {
      * 解散房间
      */
     public static void dissolveRoom(String roomId) {
-        sessionPool.remove(roomId);
+        roomAndUserSessionPool.remove(roomId);
     }
 
     /**
@@ -103,7 +125,7 @@ public class WebSocketService {
      * @param message 发送的消息
      */
     public static void sendAllMessage(String roomId, WsMsg message) {
-        ConcurrentHashMap<String, Session> roomSession = sessionPool.get(roomId);
+        ConcurrentHashMap<String, Session> roomSession = roomAndUserSessionPool.get(roomId);
         if (null != roomSession) {
             for (Map.Entry<String, Session> userSession : roomSession.entrySet()) {
                 try {
@@ -112,6 +134,22 @@ public class WebSocketService {
                     roomSession.remove(userSession.getKey());
                     log.error("信息发送错误: " + e.getMessage(), e);
                 }
+            }
+        }
+    }
+
+    /**
+     * 群发消息
+     *
+     * @param message 发送的消息给用户
+     */
+    public static void sendUserMessage(String userid, WsMsg message) {
+        Session session = userSessionPool.get(userid);
+        if (null != session) {
+            try {
+                session.getBasicRemote().sendText(JSONObject.toJSONString(message));
+            } catch (Exception e) {
+                log.error("信息发送错误: " + e.getMessage(), e);
             }
         }
     }

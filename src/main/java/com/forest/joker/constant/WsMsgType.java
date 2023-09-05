@@ -7,5 +7,6 @@ import lombok.Data;
  **/
 public enum WsMsgType {
     Quit(),
-    Info()
+    Info(),
+    Kick()
 }

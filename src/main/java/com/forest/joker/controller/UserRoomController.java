@@ -6,10 +6,7 @@ import com.forest.joker.exception.JokerAopException;
 import com.forest.joker.service.UserRoomService;
 import com.forest.joker.utils.JwtUtil;
 import com.forest.joker.utils.ResultUtil;
-import com.forest.joker.vo.UserJoinRoomByQrVo;
-import com.forest.joker.vo.UserJoinRoomVo;
-import com.forest.joker.vo.UserQuitRoomVo;
-import com.forest.joker.vo.UserRoomInfosVo;
+import com.forest.joker.vo.*;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -79,6 +76,15 @@ public class UserRoomController {
     @PostMapping("/quit")
     public Object userQuitRoom(@Userid String userid, @RequestBody UserQuitRoomVo userQuitRoomVo) {
         JSONObject result = userRoomService.userQuitRoom(userid, userQuitRoomVo);
+        return result;
+    }
+
+    /**
+     * 房主将用户踢出房间
+     */
+    @PostMapping("/kickOut")
+    public Object userKickOut(@Userid String userid, @RequestBody UserKickOutVo userKickOutVo) {
+        JSONObject result = userRoomService.userKickOut(userid, userKickOutVo);
         return result;
     }
 }

@@ -16,6 +16,7 @@ import com.forest.joker.utils.JwtUtil;
 import com.forest.joker.utils.RandomUtil;
 import com.forest.joker.utils.ResultUtil;
 import com.forest.joker.vo.UserJoinRoomVo;
+import com.forest.joker.vo.UserKickOutVo;
 import com.forest.joker.vo.UserQuitRoomVo;
 import com.forest.joker.vo.UserRoomInfosVo;
 import com.forest.joker.ws.WebSocketService;
@@ -167,6 +168,31 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
         JSONObject resultJson = new JSONObject();
         resultJson.put("qrToken", token);
         return ResultUtil.Succeed(resultJson);
+    }
+
+    @Override
+    public JSONObject userKickOut(String userid, UserKickOutVo userKickOutVo) {
+        LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userRoomLambdaQueryWrapper.eq(UserRoom::getUserId, userid).eq(UserRoom::getRoomId, userKickOutVo.getRoomId());
+        UserRoom userRoom = getOne(userRoomLambdaQueryWrapper);
+        if (null == userRoom) {
+            return ResultUtil.Fail("房间不存在~");
+        }
+        if (userRoom.getIsOwner() != 1) {
+            return ResultUtil.Fail("您不是房主~");
+        }
+        userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userRoomLambdaQueryWrapper.eq(UserRoom::getRoomId, userKickOutVo.getRoomId())
+                .eq(UserRoom::getUserId, userKickOutVo.getUserId());
+        //踢出房间
+        boolean flag = remove(userRoomLambdaQueryWrapper);
+        WebSocketService.sendUserMessage(userKickOutVo.getUserId(), new WsMsg(WsMsgType.Kick, null));
+        WebSocketService.quitRoom(userKickOutVo.getRoomId(), userKickOutVo.getUserId());
+        WebSocketService.sendAllMessage(userKickOutVo.getRoomId(), new WsMsg(WsMsgType.Info, getUserRoomInfoByRoomId(userKickOutVo.getRoomId())));
+        if (flag)
+            return ResultUtil.Succeed();
+        else
+            return ResultUtil.Fail();
     }
 
     public UserRoom getUserRoomByUserIdAndRoomId(String userId, String roomId) {
