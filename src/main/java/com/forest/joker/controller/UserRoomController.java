@@ -96,4 +96,13 @@ public class UserRoomController {
         JSONObject result = userRoomService.userSetOwner(userid, userSetOwnerVo);
         return result;
     }
+
+    /**
+     * 设置庄家
+     */
+    @PostMapping("/dealers")
+    public Object userSetDealers(@Userid String userid, @RequestBody UserSetDealersVo userSetDealersVo) {
+        JSONObject result = userRoomService.userSetDealers(userid, userSetDealersVo);
+        return result;
+    }
 }

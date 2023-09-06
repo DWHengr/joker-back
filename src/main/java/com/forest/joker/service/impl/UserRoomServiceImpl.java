@@ -170,16 +170,14 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
 
     @Override
     public JSONObject userKickOut(String userid, UserKickOutVo userKickOutVo) {
-        LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userRoomLambdaQueryWrapper.eq(UserRoom::getUserId, userid).eq(UserRoom::getRoomId, userKickOutVo.getRoomId());
-        UserRoom userRoom = getOne(userRoomLambdaQueryWrapper);
-        if (null == userRoom) {
+        UserRoom ownerByRoomId = getOwnerByRoomId(userKickOutVo.getRoomId());
+        if (null == ownerByRoomId) {
             return ResultUtil.Fail("房间不存在~");
         }
-        if (userRoom.getIsOwner() != 1) {
+        if (!ownerByRoomId.getUserId().equals(userid)) {
             return ResultUtil.Fail("您不是房主~");
         }
-        userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userRoomLambdaQueryWrapper.eq(UserRoom::getRoomId, userKickOutVo.getRoomId())
                 .eq(UserRoom::getUserId, userKickOutVo.getUserId());
         //踢出房间
@@ -196,13 +194,11 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
     @Override
     @Transactional(rollbackFor = {RuntimeException.class})
     public JSONObject userSetOwner(String userid, UserSetOwnerVo userSetOwnerVo) {
-        LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userRoomLambdaQueryWrapper.eq(UserRoom::getUserId, userid).eq(UserRoom::getRoomId, userSetOwnerVo.getRoomId());
-        UserRoom userRoom = getOne(userRoomLambdaQueryWrapper);
-        if (null == userRoom) {
+        UserRoom ownerByRoomId = getOwnerByRoomId(userSetOwnerVo.getRoomId());
+        if (null == ownerByRoomId) {
             return ResultUtil.Fail("房间不存在~");
         }
-        if (userRoom.getIsOwner() != 1) {
+        if (!ownerByRoomId.getUserId().equals(userid)) {
             return ResultUtil.Fail("您不是房主~");
         }
         LambdaUpdateWrapper<UserRoom> userRoomLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
@@ -227,10 +223,67 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
 
     }
 
+    @Override
+    public JSONObject userSetDealers(String userid, UserSetDealersVo userSetDealersVo) {
+        UserRoom ownerByRoomId = getOwnerByRoomId(userSetDealersVo.getRoomId());
+        if (null == ownerByRoomId) {
+            return ResultUtil.Fail("房间不存在~");
+        }
+        if (!ownerByRoomId.getUserId().equals(userid)) {
+            return ResultUtil.Fail("您不是房主~");
+        }
+        //查询当前庄家
+        UserRoom dealersByRoomId = getDealersByRoomId(userSetDealersVo.getRoomId());
+        LambdaUpdateWrapper<UserRoom> userRoomLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        userRoomLambdaUpdateWrapper.set(UserRoom::getIsDealers, 0)
+                .eq(UserRoom::getRoomId, userSetDealersVo.getRoomId())
+                .eq(UserRoom::getUserId, dealersByRoomId.getUserId());
+        boolean flag = update(userRoomLambdaUpdateWrapper);
+
+        if (!flag) {
+            throw new JokerAopException("庄家设置失败~");
+        }
+        //设置庄家
+        userRoomLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        userRoomLambdaUpdateWrapper.set(UserRoom::getIsDealers, 1)
+                .eq(UserRoom::getRoomId, userSetDealersVo.getRoomId())
+                .eq(UserRoom::getUserId, userSetDealersVo.getUserId());
+        flag = update(userRoomLambdaUpdateWrapper);
+        if (!flag) {
+            throw new JokerAopException("庄家设置失败~");
+        }
+        WebSocketService.sendAllMessage(userSetDealersVo.getRoomId(), new WsMsg(WsMsgType.Info, getUserRoomInfoByRoomId(userSetDealersVo.getRoomId())));
+        return ResultUtil.Succeed();
+    }
+
     public UserRoom getUserRoomByUserIdAndRoomId(String userId, String roomId) {
         LambdaQueryWrapper<UserRoom> roomLambdaQueryWrapper = new LambdaQueryWrapper();
         roomLambdaQueryWrapper.eq(UserRoom::getRoomId, roomId).eq(UserRoom::getUserId, userId);
         UserRoom userRoom = getOne(roomLambdaQueryWrapper);
+        return userRoom;
+    }
+
+    /**
+     * 获取房间房主
+     *
+     * @return
+     */
+    public UserRoom getOwnerByRoomId(String roomId) {
+        LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userRoomLambdaQueryWrapper.eq(UserRoom::getIsOwner, 1).eq(UserRoom::getRoomId, roomId);
+        UserRoom userRoom = getOne(userRoomLambdaQueryWrapper);
+        return userRoom;
+    }
+
+    /**
+     * 获取房间庄家
+     *
+     * @return
+     */
+    public UserRoom getDealersByRoomId(String roomId) {
+        LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userRoomLambdaQueryWrapper.eq(UserRoom::getIsDealers, 1).eq(UserRoom::getRoomId, roomId);
+        UserRoom userRoom = getOne(userRoomLambdaQueryWrapper);
         return userRoom;
     }
 

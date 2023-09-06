@@ -32,4 +32,6 @@ public interface UserRoomService extends IService<UserRoom> {
     JSONObject userKickOut(String userid, UserKickOutVo userKickOutVo);
 
     JSONObject userSetOwner(String userid, UserSetOwnerVo userSetOwnerVo);
+
+    JSONObject userSetDealers(String userid, UserSetDealersVo userSetDealersVo);
 }
