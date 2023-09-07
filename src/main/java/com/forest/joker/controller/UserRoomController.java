@@ -105,4 +105,13 @@ public class UserRoomController {
         JSONObject result = userRoomService.userSetDealers(userid, userSetDealersVo);
         return result;
     }
+
+    /**
+     * 分数加1
+     */
+    @PostMapping("/score/add1")
+    public Object userScoreAdd1(@Userid String userid, @RequestBody UserScoreAdd1Vo userScoreAdd1Vo) {
+        JSONObject result = userRoomService.userScoreAdd1(userid, userScoreAdd1Vo);
+        return result;
+    }
 }
