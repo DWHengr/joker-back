@@ -282,6 +282,32 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
         return ResultUtil.Succeed();
     }
 
+    @Override
+    public JSONObject userScoreSubtract1(String userid, UserScoreAdd1Vo userScoreAdd1Vo) {
+        UserRoom ownerByRoomId = getOwnerByRoomId(userScoreAdd1Vo.getRoomId());
+        if (null == ownerByRoomId) {
+            return ResultUtil.Fail("房间不存在~");
+        }
+        if (!ownerByRoomId.getUserId().equals(userid)) {
+            return ResultUtil.Fail("您不是房主~");
+        }
+        UserRoom userRoom = getUserRoom(userScoreAdd1Vo.getRoomId(), userScoreAdd1Vo.getUserId());
+        if (null == userRoom) {
+            return ResultUtil.Fail("成员不存在~");
+        }
+        //分数加1
+        LambdaUpdateWrapper<UserRoom> userRoomLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        userRoomLambdaUpdateWrapper.set(UserRoom::getScore, userRoom.getScore() - 1)
+                .eq(UserRoom::getRoomId, userScoreAdd1Vo.getRoomId())
+                .eq(UserRoom::getUserId, userScoreAdd1Vo.getUserId());
+        boolean flag = update(userRoomLambdaUpdateWrapper);
+        if (!flag) {
+            throw new JokerAopException("分数减少失败~");
+        }
+        WebSocketService.sendAllMessage(userScoreAdd1Vo.getRoomId(), new WsMsg(WsMsgType.Info, getUserRoomInfoByRoomId(userScoreAdd1Vo.getRoomId())));
+        return ResultUtil.Succeed();
+    }
+
     public UserRoom getUserRoomByUserIdAndRoomId(String userId, String roomId) {
         LambdaQueryWrapper<UserRoom> roomLambdaQueryWrapper = new LambdaQueryWrapper();
         roomLambdaQueryWrapper.eq(UserRoom::getRoomId, roomId).eq(UserRoom::getUserId, userId);
