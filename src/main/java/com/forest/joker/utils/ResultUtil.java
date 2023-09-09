@@ -160,7 +160,7 @@ public class ResultUtil {
     public static JSONObject TokenInvalid() {
         JSONObject result = new JSONObject();
         result.put(CODE, ResponseEnum.TOKEN_INVALID.getType());
-        result.put(MSG, "token失效");
+        result.put(MSG, "认证失效,请重新登录~");
         return result;
     }
 }

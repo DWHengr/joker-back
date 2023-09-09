@@ -76,7 +76,7 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
     public Object roomInfoByUserid(String userid) {
         UserRoom personalUserRoomInfo = userRoomService.getPersonalUserRoomInfo(userid);
         if (null == personalUserRoomInfo)
-            return ResultUtil.Succeed(null);
+            throw new JokerAopException("房间已被解散~");
         LambdaQueryWrapper<Room> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Room::getId, personalUserRoomInfo.getRoomId());
         Room room = getOne(wrapper);
