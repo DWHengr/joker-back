@@ -123,4 +123,13 @@ public class UserRoomController {
         JSONObject result = userRoomService.userScoreSubtract1(userid, userScoreAdd1Vo);
         return result;
     }
+
+    /**
+     * 分数提交
+     */
+    @PostMapping("/score/submit")
+    public Object userScoreSubmit(@Userid String userid, @RequestBody UserScoreSubmitVo userScoreSubmitVo) {
+        JSONObject result = userRoomService.userScoreSubmit(userid, userScoreSubmitVo);
+        return result;
+    }
 }

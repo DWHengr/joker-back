@@ -3,6 +3,7 @@ package com.forest.joker.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.forest.joker.constant.UserRoomStatus;
 import com.forest.joker.constant.WsMsgType;
 import com.forest.joker.entity.Room;
 import com.forest.joker.entity.User;
@@ -90,7 +91,7 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
         userRoom.setRoomId(roomId);
         userRoom.setUserId(userid);
         userRoom.setScore(0);
-        userRoom.setBeforeRoundScore(0);
+        userRoom.setRoundScore(0);
         userRoom.setIsDealers(dealers);
         userRoom.setIsOwner(owner);
         userRoom.setCreateTime(System.currentTimeMillis());
@@ -305,6 +306,51 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
             throw new JokerAopException("分数减少失败~");
         }
         WebSocketService.sendAllMessage(userScoreAdd1Vo.getRoomId(), new WsMsg(WsMsgType.Info, getUserRoomInfoByRoomId(userScoreAdd1Vo.getRoomId())));
+        return ResultUtil.Succeed();
+    }
+
+    @Override
+    @Transactional(rollbackFor = {RuntimeException.class})
+    public JSONObject userScoreSubmit(String userid, UserScoreSubmitVo userScoreSubmitVo) {
+        //获取该房间所有成员
+        UserRoom userRoom = getPersonalUserRoomInfo(userid);
+        if (null == userRoom) {
+            return ResultUtil.Fail("房间不存在~");
+        }
+        if (userRoom.getIsDealers() == 1) {
+            return ResultUtil.Fail("您是庄家,请等待其他成员结算~");
+        }
+        if (UserRoomStatus.Settled.toString().equals(userRoom.getStatus())) {
+            return ResultUtil.Fail("您已结算,请求先撤销~");
+        }
+        //分数改变
+        LambdaUpdateWrapper<UserRoom> userRoomLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        userRoomLambdaUpdateWrapper
+                .set(UserRoom::getRoundScore, userScoreSubmitVo.getScore())
+                .set(UserRoom::getScore, userRoom.getScore() + userScoreSubmitVo.getScore())
+                .set(UserRoom::getStatus, UserRoomStatus.Settled)
+                .eq(UserRoom::getRoomId, userRoom.getRoomId())
+                .eq(UserRoom::getUserId, userid);
+        boolean flag = update(userRoomLambdaUpdateWrapper);
+        if (!flag) {
+            throw new JokerAopException("分数提交失败~");
+        }
+        //获取庄家
+        UserRoom dealersUserRoom = getDealersByRoomId(userRoom.getRoomId());
+        if (null != dealersUserRoom) {
+            //庄家分数改变
+            userRoomLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            userRoomLambdaUpdateWrapper
+                    .set(UserRoom::getRoundScore, -userScoreSubmitVo.getScore())
+                    .set(UserRoom::getScore, dealersUserRoom.getScore() - userScoreSubmitVo.getScore())
+                    .eq(UserRoom::getRoomId, dealersUserRoom.getRoomId())
+                    .eq(UserRoom::getUserId, dealersUserRoom.getUserId());
+            flag = update(userRoomLambdaUpdateWrapper);
+            if (!flag) {
+                throw new JokerAopException("分数提交失败~");
+            }
+        }
+        WebSocketService.sendAllMessage(userRoom.getRoomId(), new WsMsg(WsMsgType.Info, getUserRoomInfoByRoomId(userRoom.getRoomId())));
         return ResultUtil.Succeed();
     }
 
