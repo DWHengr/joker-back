@@ -34,15 +34,15 @@ CREATE TABLE `room`
 DROP TABLE if EXISTS `user_room`;
 CREATE TABLE `user_room`
 (
-    `id`                 varchar(64)  NOT NULL,
-    `user_id`            varchar(64)  NOT NULL COMMENT '用户id',
-    `room_id`            varchar(200) NOT NULL COMMENT '房间id',
-    `score`              int COMMENT '总分',
-    `before_round_score` int COMMENT '上一轮次得分',
-    `status`             varchar(500) COMMENT '当前状态',
-    `is_dealers`         int COMMENT '是否庄家',
-    `is_owner`           int COMMENT '是否房主',
-    `create_time`        bigint DEFAULT 0 COMMENT '创建时间',
-    `update_time`        bigint DEFAULT 0 COMMENT '更新时间',
+    `id`          varchar(64)  NOT NULL,
+    `user_id`     varchar(64)  NOT NULL COMMENT '用户id',
+    `room_id`     varchar(200) NOT NULL COMMENT '房间id',
+    `score`       int COMMENT '总分',
+    `round_score` int COMMENT '本轮次得分',
+    `status`      varchar(500) COMMENT '当前状态',
+    `is_dealers`  int COMMENT '是否庄家',
+    `is_owner`    int COMMENT '是否房主',
+    `create_time` bigint DEFAULT 0 COMMENT '创建时间',
+    `update_time` bigint DEFAULT 0 COMMENT '更新时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户房间表' row_format=dynamic;

@@ -48,10 +48,10 @@ public class UserRoom implements Serializable {
     private Integer score;
 
     /**
-     * 总分
+     * 本轮次得分
      */
-    @TableField("before_round_score")
-    private Integer beforeRoundScore;
+    @TableField("round_score")
+    private Integer roundScore;
 
     /**
      * 当前状态
