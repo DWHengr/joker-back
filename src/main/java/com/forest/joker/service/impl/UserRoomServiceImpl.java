@@ -416,6 +416,7 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
         List<UserRoomInfosVo.UserRoomInfoVo> userRoomInfoList = new ArrayList<>();
 
         String roomOwnerUserId = "";
+        String roomDealersUserId = "";
         for (UserRoom userRoom : userRooms) {
             UserRoomInfosVo.UserRoomInfoVo userRoomInfoVo = new UserRoomInfosVo.UserRoomInfoVo();
             BeanUtils.copyProperties(userRoom, userRoomInfoVo);
@@ -427,7 +428,11 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
             if (userRoom.getIsOwner() == 1) {
                 roomOwnerUserId = userRoom.getUserId();
             }
+            if (userRoom.getIsDealers() == 1) {
+                roomDealersUserId = userRoom.getUserId();
+            }
         }
+        userRoomInfosVo.setRoomOwnerUserId(roomDealersUserId);
         userRoomInfosVo.setRoomOwnerUserId(roomOwnerUserId);
         userRoomInfosVo.setUserRooms(userRoomInfoList);
         return userRoomInfosVo;
