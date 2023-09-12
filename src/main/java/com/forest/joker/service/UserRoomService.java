@@ -40,4 +40,6 @@ public interface UserRoomService extends IService<UserRoom> {
     JSONObject userScoreSubtract1(String userid, UserScoreAdd1Vo userScoreAdd1Vo);
 
     JSONObject userScoreSubmit(String userid, UserScoreSubmitVo userScoreSubmitVo);
+
+    JSONObject userScoreAnnul(String userid);
 }

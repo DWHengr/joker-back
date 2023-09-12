@@ -132,4 +132,13 @@ public class UserRoomController {
         JSONObject result = userRoomService.userScoreSubmit(userid, userScoreSubmitVo);
         return result;
     }
+
+    /**
+     * 分数撤销
+     */
+    @PostMapping("/score/annul")
+    public Object userScoreAnnul(@Userid String userid) {
+        JSONObject result = userRoomService.userScoreAnnul(userid);
+        return result;
+    }
 }
