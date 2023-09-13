@@ -2,6 +2,7 @@ package com.forest.joker.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.forest.joker.entity.Room;
 import com.forest.joker.entity.UserRoom;
 import com.forest.joker.exception.JokerAopException;
@@ -93,5 +94,17 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
         } catch (Exception e) {
             throw new JokerAopException("房间信息错误");
         }
+    }
+
+    @Override
+    public boolean updateRoomRound(String roomId) {
+        Room room = getById(roomId);
+        if (null == room) {
+            return false;
+        }
+        LambdaUpdateWrapper<Room> lambdaQueryWrapper = new LambdaUpdateWrapper<>();
+        lambdaQueryWrapper.set(Room::getRound, room.getRound() + 1)
+                .eq(Room::getId, roomId);
+        return update(lambdaQueryWrapper);
     }
 }

@@ -141,4 +141,13 @@ public class UserRoomController {
         JSONObject result = userRoomService.userScoreAnnul(userid);
         return result;
     }
+
+    /**
+     * 开始下一轮
+     */
+    @PostMapping("/start")
+    public Object userRoomStart(@Userid String userid) {
+        JSONObject result = userRoomService.userRoomStart(userid);
+        return result;
+    }
 }

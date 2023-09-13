@@ -14,6 +14,7 @@ public class UserRoomInfosVo {
     private Room room;
     private List<UserRoomInfoVo> userRooms;
     private String roomOwnerUserId;
+    private String roomDealersUserId;
 
     @Data
     public static class UserRoomInfoVo extends UserRoom {

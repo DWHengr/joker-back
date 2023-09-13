@@ -3,6 +3,7 @@ package com.forest.joker.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.forest.joker.constant.UserRoomStatus;
 import com.forest.joker.constant.WsMsgType;
 import com.forest.joker.entity.Room;
@@ -343,6 +344,7 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
             userRoomLambdaUpdateWrapper
                     .set(UserRoom::getRoundScore, dealersUserRoom.getRoundScore() - userScoreSubmitVo.getScore())
                     .set(UserRoom::getScore, dealersUserRoom.getScore() - userScoreSubmitVo.getScore())
+                    .set(UserRoom::getStatus, UserRoomStatus.Settled)
                     .eq(UserRoom::getRoomId, dealersUserRoom.getRoomId())
                     .eq(UserRoom::getUserId, dealersUserRoom.getUserId());
             flag = update(userRoomLambdaUpdateWrapper);
@@ -364,7 +366,7 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
             return ResultUtil.Fail("您是庄家,请等待其他成员结算~");
         }
         if (!UserRoomStatus.Settled.toString().equals(userRoom.getStatus())) {
-            return ResultUtil.Fail("您为提交,无需撤销~");
+            return ResultUtil.Fail("您为庄家,无需撤销~");
         }
         //分数改变
         LambdaUpdateWrapper<UserRoom> userRoomLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
@@ -395,6 +397,41 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
         }
         WebSocketService.sendAllMessage(userRoom.getRoomId(), new WsMsg(WsMsgType.Info, getUserRoomInfoByRoomId(userRoom.getRoomId())));
         return ResultUtil.Succeed();
+    }
+
+    @Override
+    @Transactional(rollbackFor = {RuntimeException.class})
+    public JSONObject userRoomStart(String userid) {
+        UserRoom userRoom = getPersonalUserRoomInfo(userid);
+        if (null == userRoom) {
+            return ResultUtil.Fail("房间不存在~");
+        }
+        if (userRoom.getIsOwner() != 1) {
+            return ResultUtil.Fail("您不是房主~");
+        }
+        List<UserRoom> userRooms = listByRoomId(userRoom.getRoomId());
+        long settledNum = userRooms.stream().filter(v -> UserRoomStatus.Settled.toString().equals(v.getStatus())).count();
+        //除去庄家，所有人都结算
+        if (settledNum >= userRooms.size()) {
+            //开启下一轮
+            roomService.updateRoomRound(userRoom.getRoomId());
+            //更分数
+            LambdaUpdateWrapper<UserRoom> userRoomUpdateWrapper = new LambdaUpdateWrapper<>();
+            userRoomUpdateWrapper.set(UserRoom::getRoundScore, 0)
+                    .set(UserRoom::getStatus, UserRoomStatus.Unsettled.toString())
+                    .eq(UserRoom::getRoomId, userRoom.getRoomId());
+            update(userRoomUpdateWrapper);
+            WebSocketService.sendAllMessage(userRoom.getRoomId(), new WsMsg(WsMsgType.Info, getUserRoomInfoByRoomId(userRoom.getRoomId())));
+        } else {
+            return ResultUtil.Fail("等待其他成员结算~");
+        }
+        return ResultUtil.Succeed();
+    }
+
+    public List<UserRoom> listByRoomId(String roomId) {
+        LambdaQueryWrapper<UserRoom> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(UserRoom::getRoomId, roomId);
+        return list(lambdaQueryWrapper);
     }
 
     public UserRoom getUserRoomByUserIdAndRoomId(String userId, String roomId) {
@@ -475,7 +512,7 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
                 roomDealersUserId = userRoom.getUserId();
             }
         }
-        userRoomInfosVo.setRoomOwnerUserId(roomDealersUserId);
+        userRoomInfosVo.setRoomDealersUserId(roomDealersUserId);
         userRoomInfosVo.setRoomOwnerUserId(roomOwnerUserId);
         userRoomInfosVo.setUserRooms(userRoomInfoList);
         return userRoomInfosVo;
