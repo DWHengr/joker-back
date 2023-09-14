@@ -491,7 +491,7 @@ public class UserRoomServiceImpl extends ServiceImpl<UserRoomMapper, UserRoom> i
 
         //房间所有用户信息
         LambdaQueryWrapper<UserRoom> userRoomLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userRoomLambdaQueryWrapper.eq(UserRoom::getRoomId, roomId);
+        userRoomLambdaQueryWrapper.eq(UserRoom::getRoomId, roomId).orderByDesc(UserRoom::getScore);
         List<UserRoom> userRooms = list(userRoomLambdaQueryWrapper);
         List<UserRoomInfosVo.UserRoomInfoVo> userRoomInfoList = new ArrayList<>();
 
