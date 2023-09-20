@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.forest.joker.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.forest.joker.vo.LoginVo;
+import com.forest.joker.vo.ModifyNameVo;
 
 /**
  * <p>
@@ -16,4 +17,6 @@ import com.forest.joker.vo.LoginVo;
 public interface UserService extends IService<User> {
 
     JSONObject validateLogin(LoginVo loginVo);
+
+    JSONObject modifyName(String userid, ModifyNameVo modifyNameVo);
 }

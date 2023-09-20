@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.forest.joker.utils.JwtUtil;
 import com.forest.joker.utils.ResultUtil;
 import com.forest.joker.vo.LoginVo;
+import com.forest.joker.vo.ModifyNameVo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -76,4 +77,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userinfo.put("token", jwtUtil.createToken(userinfo));
         return ResultUtil.Succeed(userinfo);
     }
+
+    @Override
+    public JSONObject modifyName(String userid, ModifyNameVo modifyNameVo) {
+        User user = getById(userid);
+        user.setName(modifyNameVo.getName());
+        if (null == user) {
+            return ResultUtil.Fail("用户不存在~");
+        }
+        boolean flag = updateById(user);
+        if (!flag)
+            return ResultUtil.Fail("用户名称修改失败~");
+        else
+            return ResultUtil.Succeed("用户名称修改成功~");
+    }
+
 }
