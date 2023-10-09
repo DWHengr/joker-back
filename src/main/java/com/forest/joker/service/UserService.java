@@ -5,6 +5,7 @@ import com.forest.joker.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.forest.joker.vo.LoginVo;
 import com.forest.joker.vo.ModifyNameVo;
+import com.forest.joker.vo.ModifyPasswordVo;
 
 /**
  * <p>
@@ -19,4 +20,6 @@ public interface UserService extends IService<User> {
     JSONObject validateLogin(LoginVo loginVo);
 
     JSONObject modifyName(String userid, ModifyNameVo modifyNameVo);
+
+    JSONObject modifyPassword(String userid, ModifyPasswordVo modifyPasswordVo);
 }

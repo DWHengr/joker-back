@@ -14,6 +14,7 @@ import com.forest.joker.utils.JwtUtil;
 import com.forest.joker.utils.ResultUtil;
 import com.forest.joker.vo.LoginVo;
 import com.forest.joker.vo.ModifyNameVo;
+import com.forest.joker.vo.ModifyPasswordVo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -81,15 +82,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public JSONObject modifyName(String userid, ModifyNameVo modifyNameVo) {
         User user = getById(userid);
-        user.setName(modifyNameVo.getName());
         if (null == user) {
             return ResultUtil.Fail("用户不存在~");
         }
+        user.setName(modifyNameVo.getName());
         boolean flag = updateById(user);
         if (!flag)
             return ResultUtil.Fail("用户名称修改失败~");
         else
             return ResultUtil.Succeed("用户名称修改成功~");
+    }
+
+    @Override
+    public JSONObject modifyPassword(String userid, ModifyPasswordVo modifyPasswordVo) {
+        User user = getById(userid);
+        if (null == user) {
+            return ResultUtil.Fail("用户不存在~");
+        }
+        if (user.getPassword().equals(modifyPasswordVo.getOldPassword())) {
+            return ResultUtil.Fail("原密码错误~");
+        }
+        user.setName(modifyPasswordVo.getNewPassword());
+        boolean flag = updateById(user);
+        if (!flag)
+            return ResultUtil.Fail("密码修改失败~");
+        else
+            return ResultUtil.Succeed("密码修改成功~");
     }
 
 }

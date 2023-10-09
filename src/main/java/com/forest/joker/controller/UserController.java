@@ -6,6 +6,7 @@ import com.forest.joker.entity.User;
 import com.forest.joker.service.UserService;
 import com.forest.joker.utils.ResultUtil;
 import com.forest.joker.vo.ModifyNameVo;
+import com.forest.joker.vo.ModifyPasswordVo;
 import com.forest.joker.vo.ProfileResultVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -59,6 +60,21 @@ public class UserController {
             return ResultUtil.Fail("用户名称不能为空~");
         }
         JSONObject result = userService.modifyName(userid, modifyNameVo);
+        return result;
+    }
+
+    /**
+     * 用户修改密码
+     */
+    @PostMapping("/modify/password")
+    public Object modifyPassword(@Userid String userid, @RequestBody ModifyPasswordVo modifyPasswordVo) {
+        if (StringUtils.isEmpty(modifyPasswordVo.getOldPassword())) {
+            return ResultUtil.Fail("旧密码不能为空~");
+        }
+        if (StringUtils.isEmpty(modifyPasswordVo.getOldPassword())) {
+            return ResultUtil.Fail("新密码不能为空~");
+        }
+        JSONObject result = userService.modifyPassword(userid, modifyPasswordVo);
         return result;
     }
 }
