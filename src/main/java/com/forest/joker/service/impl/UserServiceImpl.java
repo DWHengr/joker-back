@@ -99,10 +99,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (null == user) {
             return ResultUtil.Fail("用户不存在~");
         }
-        if (user.getPassword().equals(modifyPasswordVo.getOldPassword())) {
+        if (!user.getPassword().equals(modifyPasswordVo.getOldPassword())) {
             return ResultUtil.Fail("原密码错误~");
         }
-        user.setName(modifyPasswordVo.getNewPassword());
+        user.setPassword(modifyPasswordVo.getNewPassword());
         boolean flag = updateById(user);
         if (!flag)
             return ResultUtil.Fail("密码修改失败~");
